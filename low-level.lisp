@@ -253,7 +253,8 @@
   (parser ts-parser)
   (old-tree ts-tree)
   (string :string)
-  (length :uint32))
+  (length :uint32)
+  (encoding ts-input-encoding))
 
 (defcfun ts-parser-reset :void
   (parser ts-parser))
