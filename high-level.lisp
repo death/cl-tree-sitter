@@ -13,6 +13,9 @@
    #:define-foreign-library
    #:use-foreign-library
    #:foreign-funcall)
+  (:import-from
+   #:babel
+   #:string-size-in-octets)
   (:export
    #:register-language
    #:list-all-languages
@@ -98,7 +101,7 @@
              (error 'cant-set-language :language language))
            (let* ((string-start start)
                   (string-end (or end (length string)))
-                  (string-length (- string-end string-start))
+                  (string-length (string-size-in-octets string :start string-start :end string-end))
                   (string-to-pass (if (plusp string-start)
                                       (subseq string string-start string-end)
                                       string))
