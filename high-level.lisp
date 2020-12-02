@@ -92,64 +92,68 @@
 ;; Parser
 
 (defun parse-string (language string &key (start 0) end produce-cst)
+  "Parse a STRING that represents LANGUAGE code using tree-sitter. START is
+where to start parsing STRING. END is where to stop parsing STRING.
+When PRODUCE-CST is set, the full concrete syntax tree will be produced as
+opposed to the abstract syntax tree. See 'Named vs Anonymous Nodes':
+http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes"
   (let ((parser (ts-parser-new)))
     (when (null-pointer-p parser)
       (error 'cant-create-parser))
-    (unwind-protect
-         (progn
-           (unless (ts-parser-set-language parser (language-module language))
-             (error 'cant-set-language :language language))
-           (let* ((string-start start)
-                  (string-end (or end (length string)))
-                  (string-length (string-size-in-octets string :start string-start :end string-end))
-                  (string-to-pass (if (plusp string-start)
-                                      (subseq string string-start string-end)
-                                      string))
-                  (tree (ts-parser-parse-string parser (null-pointer) string-to-pass string-length)))
-             (when (null-pointer-p tree)
-               (error 'cant-parser-string
-                      :string string
-                      :string-start start
-                      :string-end end
-                      :language language))
-             (unwind-protect
-                  (let ((root-node (ts-tree-root-node tree)))
-                    (with-tree-cursor (cursor root-node)
-                      ;; Closely follows tree-sitter-cli parse
-                      ;; implementation.
-                      (let ((did-visit-children nil)
-                            (parse-stack '()))
-                        (loop
-                         (let* ((node (ts-tree-cursor-current-node cursor))
-                                (is-named (or produce-cst (ts-node-is-named node))))
-                           (cond (did-visit-children
-                                  (when is-named
-                                    (when (second parse-stack)
-                                      (let ((item (pop parse-stack)))
-                                        (setf (node-children (first parse-stack))
-                                              (append (node-children (first parse-stack))
-                                                      (list item))))))
-                                  (cond ((ts-tree-cursor-goto-next-sibling cursor)
-                                         (setf did-visit-children nil))
-                                        ((ts-tree-cursor-goto-parent cursor)
-                                         (setf did-visit-children t))
-                                        (t
-                                         (return))))
-                                 (t
-                                  (when is-named
-                                    (let ((start-point (ts-node-start-point node))
-                                          (end-point (ts-node-end-point node))
-                                          (type (make-lisp-name (ts-node-type node)))
-                                          (field-name-ptr (ts-tree-cursor-current-field-name cursor)))
-                                      (unless (null-pointer-p field-name-ptr)
-                                        (let ((field-name (foreign-string-to-lisp field-name-ptr)))
-                                          (setf type (list (make-lisp-name field-name) type))))
-                                      (push (make-node :type type
-                                                       :range (list (list (second start-point) (fourth start-point))
-                                                                    (list (second end-point) (fourth end-point))))
-                                            parse-stack)))
-                                  (setf did-visit-children
-                                        (not (ts-tree-cursor-goto-first-child cursor)))))))
-                        (first parse-stack))))
-               (ts-tree-delete tree))))
+    (unwind-protect (parse-string-with-language language string parser :start start :end end :produce-cst produce-cst)
       (ts-parser-delete parser))))
+
+(defun parse-string-with-language (language string parser &key (start 0) end produce-cst)
+  (unless (ts-parser-set-language parser (language-module language))
+    (error 'cant-set-language :language language))
+  (let* ((string-start start)
+         (string-end (or end (length string)))
+         (string-length (string-size-in-octets string :start string-start :end string-end))
+         (string-to-pass (if (plusp string-start)
+                             (subseq string string-start string-end)
+                             string))
+         (tree (ts-parser-parse-string parser (null-pointer) string-to-pass string-length)))
+    (when (null-pointer-p tree)
+      (error 'cant-parser-string
+             :string string
+             :string-start start
+             :string-end end
+             :language language))
+    (unwind-protect (convert-foreign-tree-to-list tree :produce-cst produce-cst)
+      (ts-tree-delete tree))))
+
+(defun convert-foreign-tree-to-list (tree &key produce-cst &aux did-visit-children parse-stack)
+  (with-tree-cursor (cursor (ts-tree-root-node tree))
+    ;; Closely follows tree-sitter-cli parse
+    ;; implementation with a modification to
+    ;; allow for production of the full CST.
+    (loop
+      (let* ((node (ts-tree-cursor-current-node cursor))
+             (is-named (or produce-cst (ts-node-is-named node))))
+        (cond (did-visit-children
+               (when (and is-named (second parse-stack))
+                 (let ((item (pop parse-stack)))
+                   (setf (node-children (first parse-stack))
+                         (append (node-children (first parse-stack))
+                                 (list item)))))
+               (cond ((ts-tree-cursor-goto-next-sibling cursor)
+                      (setf did-visit-children nil))
+                     ((ts-tree-cursor-goto-parent cursor)
+                      (setf did-visit-children t))
+                     (t
+                      (return (first parse-stack)))))
+              (t
+               (when is-named
+                 (let ((start-point (ts-node-start-point node))
+                       (end-point (ts-node-end-point node))
+                       (type (make-lisp-name (ts-node-type node)))
+                       (field-name-ptr (ts-tree-cursor-current-field-name cursor)))
+                   (unless (null-pointer-p field-name-ptr)
+                     (let ((field-name (foreign-string-to-lisp field-name-ptr)))
+                       (setf type (list (make-lisp-name field-name) type))))
+                   (push (make-node :type type
+                                    :range (list (list (second start-point) (fourth start-point))
+                                                 (list (second end-point) (fourth end-point))))
+                         parse-stack)))
+               (setf did-visit-children
+                     (not (ts-tree-cursor-goto-first-child cursor)))))))))
