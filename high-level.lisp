@@ -91,7 +91,7 @@
 
 ;; Parser
 
-(defun parse-string (language string &key (start 0) end)
+(defun parse-string (language string &key (start 0) end produce-cst)
   (let ((parser (ts-parser-new)))
     (when (null-pointer-p parser)
       (error 'cant-create-parser))
@@ -121,7 +121,7 @@
                             (parse-stack '()))
                         (loop
                          (let* ((node (ts-tree-cursor-current-node cursor))
-                                (is-named (ts-node-is-named node)))
+                                (is-named (or produce-cst (ts-node-is-named node))))
                            (cond (did-visit-children
                                   (when is-named
                                     (when (second parse-stack)
