@@ -119,7 +119,7 @@
 ;; Library
 
 (define-foreign-library tree-sitter
-  (t (:default "tree-sitter")))
+  (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
 
 (use-foreign-library tree-sitter)
 
