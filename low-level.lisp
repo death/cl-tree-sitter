@@ -119,6 +119,7 @@
 ;; Library
 
 (define-foreign-library tree-sitter
+  (:darwin (:default "/usr/local/lib/libtree-sitter"))
   (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
 
 (use-foreign-library tree-sitter)
