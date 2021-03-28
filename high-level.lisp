@@ -114,7 +114,7 @@ http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes"
                              string))
          (tree (ts-parser-parse-string parser (null-pointer) string-to-pass string-length)))
     (when (null-pointer-p tree)
-      (error 'cant-parser-string
+      (error 'cant-parse-string
              :string string
              :string-start start
              :string-end end
