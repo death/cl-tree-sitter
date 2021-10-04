@@ -39,9 +39,10 @@
 (defvar *language-registry*
   (make-hash-table))
 
-(defmacro register-language (name lib)
+(defmacro register-language (name lib &key fn-name)
   (check-type name symbol)
-  (let ((fn-name (substitute #\_ #\- (pathname-name lib)))
+  (check-type fn-name (or null string))
+  (let ((fn-name (or fn-name (substitute #\_ #\- (pathname-name lib))))
         (cffi-name (make-symbol (symbol-name name))))
     `(progn
        (define-foreign-library ,cffi-name
