@@ -92,19 +92,26 @@
 
 ;; Parser
 
-(defun parse-string (language string &key (start 0) end produce-cst)
+(defun parse-string (language string &key (start 0) end produce-cst (name-generator #'make-lisp-name))
   "Parse a STRING that represents LANGUAGE code using tree-sitter. START is
 where to start parsing STRING. END is where to stop parsing STRING.
 When PRODUCE-CST is set, the full concrete syntax tree will be produced as
 opposed to the abstract syntax tree. See 'Named vs Anonymous Nodes':
-http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes"
+http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes
+NAME-GENERATOR is a function which converts a string from tree-sitter into a
+desired name for use in lisp."
   (let ((parser (ts-parser-new)))
     (when (null-pointer-p parser)
       (error 'cant-create-parser))
-    (unwind-protect (parse-string-with-language language string parser :start start :end end :produce-cst produce-cst)
+    (unwind-protect (parse-string-with-language language string parser
+                                                :start start
+                                                :end end
+                                                :produce-cst produce-cst
+                                                :name-generator name-generator)
       (ts-parser-delete parser))))
 
-(defun parse-string-with-language (language string parser &key (start 0) end produce-cst)
+(defun parse-string-with-language (language string parser
+                                   &key (start 0) end produce-cst name-generator)
   (unless (ts-parser-set-language parser (language-module language))
     (error 'cant-set-language :language language))
   (let* ((string-start start)
@@ -120,10 +127,12 @@ http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes"
              :string-start start
              :string-end end
              :language language))
-    (unwind-protect (convert-foreign-tree-to-list tree :produce-cst produce-cst)
+    (unwind-protect (convert-foreign-tree-to-list tree :produce-cst produce-cst
+                                                       :name-generator name-generator)
       (ts-tree-delete tree))))
 
-(defun convert-foreign-tree-to-list (tree &key produce-cst &aux did-visit-children parse-stack)
+(defun convert-foreign-tree-to-list (tree &key produce-cst name-generator
+                                     &aux did-visit-children parse-stack)
   (with-tree-cursor (cursor (ts-tree-root-node tree))
     ;; Closely follows tree-sitter-cli parse
     ;; implementation with a modification to
@@ -147,11 +156,11 @@ http://tree-sitter.github.io/tree-sitter/using-parsers#named-vs-anonymous-nodes"
                (when is-named
                  (let ((start-point (ts-node-start-point node))
                        (end-point (ts-node-end-point node))
-                       (type (make-lisp-name (ts-node-type node)))
+                       (type (funcall name-generator (ts-node-type node)))
                        (field-name-ptr (ts-tree-cursor-current-field-name cursor)))
                    (unless (null-pointer-p field-name-ptr)
                      (let ((field-name (foreign-string-to-lisp field-name-ptr)))
-                       (setf type (list (make-lisp-name field-name) type))))
+                       (setf type (list (funcall name-generator field-name) type))))
                    (push (make-node :type type
                                     :range (list (list (second start-point) (fourth start-point))
                                                  (list (second end-point) (fourth end-point))))
