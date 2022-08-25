@@ -143,15 +143,18 @@ desired name for use in lisp."
         (cond (did-visit-children
                (when (and is-named (second parse-stack))
                  (let ((item (pop parse-stack)))
-                   (setf (node-children (first parse-stack))
-                         (append (node-children (first parse-stack))
-                                 (list item)))))
+                   (setf (node-children item)
+                         (nreverse (node-children item)))
+                   (push item (node-children (first parse-stack)))))
                (cond ((ts-tree-cursor-goto-next-sibling cursor)
                       (setf did-visit-children nil))
                      ((ts-tree-cursor-goto-parent cursor)
                       (setf did-visit-children t))
                      (t
-                      (return (first parse-stack)))))
+                      (let ((root (first parse-stack)))
+                        (setf (node-children root)
+                              (nreverse (node-children root)))
+                        (return root)))))
               (t
                (when is-named
                  (let ((start-point (ts-node-start-point node))
