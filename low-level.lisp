@@ -112,7 +112,16 @@
    #:ts-language-field-name-for-id
    #:ts-language-field-id-for-name
    #:ts-language-symbol-type
-   #:ts-language-version))
+   #:ts-language-version
+   #:with-ts-node-pointer
+   #:with-tree-cursor-pointer
+   #:ts-tree-cursor-new-pointer
+   #:ts-tree-root-node-pointer
+   #:ts-node-is-named-pointer
+   #:ts-tree-cursor-current-node-pointer
+   #:ts-node-start-point-pointer
+   #:ts-node-end-point-pointer
+   #:ts-node-type-pointer))
 
 (in-package #:cl-tree-sitter/low-level)
 
@@ -123,6 +132,11 @@
   (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
 
 (use-foreign-library tree-sitter)
+
+(define-foreign-library (tree-sitter-wrapper :search-path ".")
+  (t (:default "tree-sitter-wrapper")))
+
+(use-foreign-library tree-sitter-wrapper)
 
 ;; Types
 
@@ -500,3 +514,39 @@
 
 (defcfun ts-language-version :uint32
   (language ts-language))
+
+;; tree-sitter wrapper
+
+(defmacro with-ts-node-pointer ((var node) &body forms)
+  `(let ((,var ,node))
+     (unwind-protect
+          (progn ,@forms)
+       (cffi-sys:foreign-free ,var))))
+
+(defmacro with-tree-cursor-pointer ((var tree) &body forms &aux (node (gensym)))
+  `(with-ts-node-pointer (,node (ts-tree-root-node-pointer ,tree))
+     (let ((,var (ts-tree-cursor-new-pointer ,node)))
+       (unwind-protect
+            (progn ,@forms)
+         (ts-tree-cursor-delete ,var)))))
+
+(defcfun ts-tree-root-node-pointer (:pointer (:struct ts-node))
+  (tree ts-tree))
+
+(defcfun ts-tree-cursor-new-pointer (:pointer (:struct ts-tree-cursor))
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-is-named-pointer :boolean
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-tree-cursor-current-node-pointer (:pointer (:struct ts-node))
+  (cursor (:pointer (:struct ts-tree-cursor))))
+
+(defcfun ts-node-start-point-pointer (:struct ts-point)
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-end-point-pointer (:struct ts-point)
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-type-pointer :string
+  (node (:pointer (:struct ts-node))))

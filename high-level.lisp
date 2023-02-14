@@ -133,40 +133,40 @@ desired name for use in lisp."
 
 (defun convert-foreign-tree-to-list (tree &key produce-cst name-generator
                                      &aux did-visit-children parse-stack)
-  (with-tree-cursor (cursor (ts-tree-root-node tree))
+  (with-tree-cursor-pointer (cursor tree)
     ;; Closely follows tree-sitter-cli parse
     ;; implementation with a modification to
     ;; allow for production of the full CST.
     (loop
-      (let* ((node (ts-tree-cursor-current-node cursor))
-             (is-named (or produce-cst (ts-node-is-named node))))
-        (cond (did-visit-children
-               (when (and is-named (second parse-stack))
-                 (let ((item (pop parse-stack)))
-                   (setf (node-children item)
-                         (nreverse (node-children item)))
-                   (push item (node-children (first parse-stack)))))
-               (cond ((ts-tree-cursor-goto-next-sibling cursor)
-                      (setf did-visit-children nil))
-                     ((ts-tree-cursor-goto-parent cursor)
-                      (setf did-visit-children t))
-                     (t
-                      (let ((root (first parse-stack)))
-                        (setf (node-children root)
-                              (nreverse (node-children root)))
-                        (return root)))))
-              (t
-               (when is-named
-                 (let ((start-point (ts-node-start-point node))
-                       (end-point (ts-node-end-point node))
-                       (type (funcall name-generator (ts-node-type node)))
-                       (field-name-ptr (ts-tree-cursor-current-field-name cursor)))
-                   (unless (null-pointer-p field-name-ptr)
-                     (let ((field-name (foreign-string-to-lisp field-name-ptr)))
-                       (setf type (list (funcall name-generator field-name) type))))
-                   (push (make-node :type type
-                                    :range (list (list (second start-point) (fourth start-point))
-                                                 (list (second end-point) (fourth end-point))))
-                         parse-stack)))
-               (setf did-visit-children
-                     (not (ts-tree-cursor-goto-first-child cursor)))))))))
+      (with-ts-node-pointer (node (ts-tree-cursor-current-node-pointer cursor))
+        (let ((is-named (or produce-cst (ts-node-is-named-pointer node))))
+          (cond (did-visit-children
+                 (when (and is-named (second parse-stack))
+                   (let ((item (pop parse-stack)))
+                     (setf (node-children item)
+                           (nreverse (node-children item)))
+                     (push item (node-children (first parse-stack)))))
+                 (cond ((ts-tree-cursor-goto-next-sibling cursor)
+                        (setf did-visit-children nil))
+                       ((ts-tree-cursor-goto-parent cursor)
+                        (setf did-visit-children t))
+                       (t
+                        (let ((root (first parse-stack)))
+                          (setf (node-children root)
+                                (nreverse (node-children root)))
+                          (return root)))))
+                (t
+                 (when is-named
+                   (let ((start-point (ts-node-start-point-pointer node))
+                         (end-point (ts-node-end-point-pointer node))
+                         (type (funcall name-generator (ts-node-type-pointer node)))
+                         (field-name-ptr (ts-tree-cursor-current-field-name cursor)))
+                     (unless (null-pointer-p field-name-ptr)
+                       (let ((field-name (foreign-string-to-lisp field-name-ptr)))
+                         (setf type (list (funcall name-generator field-name) type))))
+                     (push (make-node :type type
+                                      :range (list (list (second start-point) (fourth start-point))
+                                                   (list (second end-point) (fourth end-point))))
+                           parse-stack)))
+                 (setf did-visit-children
+                       (not (ts-tree-cursor-goto-first-child cursor))))))))))
