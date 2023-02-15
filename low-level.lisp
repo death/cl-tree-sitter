@@ -68,12 +68,6 @@
    #:ts-node-end-byte
    #:ts-node-end-point
    #:ts-node-string
-   #:ts-node-is-null
-   #:ts-node-is-named
-   #:ts-node-is-missing
-   #:ts-node-is-extra
-   #:ts-node-has-changes
-   #:ts-node-has-error
    #:ts-node-parent
    #:ts-node-child
    #:ts-node-child-count
@@ -92,7 +86,6 @@
    #:ts-node-named-descendant-for-byte-range
    #:ts-node-named-descendant-for-point-range
    #:ts-node-edit
-   #:ts-node-eq
    #:ts-tree-cursor-new
    #:ts-tree-cursor-delete
    #:with-tree-cursor
@@ -341,24 +334,6 @@
 (defcfun ts-node-string :pointer
   (node (:struct ts-node)))
 
-(defcfun ts-node-is-null :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-named :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-missing :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-extra :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-has-changes :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-has-error :boolean
-  (node (:struct ts-node)))
-
 (defcfun ts-node-parent (:struct ts-node)
   (node (:struct ts-node)))
 
@@ -428,10 +403,6 @@
 (defcfun ts-node-edit :void
   (node (:pointer (:struct ts-node)))
   (edit (:pointer (:struct ts-input-edit))))
-
-(defcfun ts-node-eq :boolean
-  (node1 (:struct ts-node))
-  (node2 (:struct ts-node)))
 
 (defcfun ts-tree-cursor-new (:struct ts-tree-cursor)
   (node (:struct ts-node)))
