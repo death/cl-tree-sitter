@@ -126,7 +126,9 @@
 
 (use-foreign-library tree-sitter)
 
-(define-foreign-library (tree-sitter-wrapper :search-path ".")
+(define-foreign-library (tree-sitter-wrapper
+                         :search-path
+                         (asdf:system-relative-pathname :cl-tree-sitter ""))
   (t (:default "tree-sitter-wrapper")))
 
 (use-foreign-library tree-sitter-wrapper)
