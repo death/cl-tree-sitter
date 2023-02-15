@@ -9,10 +9,7 @@ API.
 
 The tree-sitter API has many functions which expect that a struct is passed
 by-value. This isn't currently supported by CFFI, but a wrapper library is
-distributed with this library to work around this. All of the functionality in
-high-level.lisp utilizes this wrapper. If any of the functionality in
-low-level.lisp is used directly, you may need to use
-[my CFFI fork](https://github.com/death/cffi).
+distributed with this library to work around this.
 
 # Example
 
