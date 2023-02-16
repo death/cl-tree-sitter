@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdbool.h>
 
 #include "api.h"
 
@@ -27,7 +26,7 @@ TSNode *ts_tree_cursor_current_node_pointer(const TSTreeCursor *cursor) {
     return return_node;
 }
 
-bool ts_node_is_named_pointer(TSNode *node) {
+int ts_node_is_named_pointer(TSNode *node) {
     return ts_node_is_named(*node);
 }
 

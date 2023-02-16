@@ -1,5 +1,5 @@
 CFLAGS	= -g -O2 -Wall -Wno-unused-value -fPIC -shared
-FILE = tree_sitter_wrapper.c
+FILE = tree-sitter-wrapper.c
 SO = tree-sitter-wrapper.so
 
 all: $(SO)

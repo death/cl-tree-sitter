@@ -27,6 +27,8 @@
    #:cant-create-parser
    #:cant-set-language
    #:cant-parse-string
+   #:null-node-pointer
+   #:null-tree-cursor-pointer
    #:parse-string
    #:node-type
    #:node-range
@@ -89,6 +91,31 @@
    (string-start :initarg :string-start :reader tree-sitter-error-string-start)
    (string-end :initarg :string-end :reader tree-sitter-error-string-end)
    (language :initarg :language :reader tree-sitter-error-language)))
+
+(define-condition null-node-pointer (tree-sitter-error)
+  ())
+
+(define-condition null-tree-cursor-pointer (tree-sitter-error)
+  ())
+
+;; Util
+
+(defmacro with-ts-node-pointer ((var node) &body forms)
+  `(let ((,var ,node))
+     (when (null-pointer-p ,var)
+       (error 'null-node-pointer))
+     (unwind-protect
+          (progn ,@forms)
+       (cffi-sys:foreign-free ,var))))
+
+(defmacro with-tree-cursor-pointer ((var tree) &body forms &aux (node (gensym)))
+  `(with-ts-node-pointer (,node (ts-tree-root-node-pointer ,tree))
+     (let ((,var (ts-tree-cursor-new-pointer ,node)))
+       (when (null-pointer-p ,var)
+         (error 'null-tree-cursor-pointer))
+       (unwind-protect
+            (progn ,@forms)
+         (ts-tree-cursor-delete ,var)))))
 
 ;; Parser
 

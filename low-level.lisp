@@ -106,8 +106,6 @@
    #:ts-language-field-id-for-name
    #:ts-language-symbol-type
    #:ts-language-version
-   #:with-ts-node-pointer
-   #:with-tree-cursor-pointer
    #:ts-tree-cursor-new-pointer
    #:ts-tree-root-node-pointer
    #:ts-node-is-named-pointer
@@ -490,26 +488,13 @@
 
 ;; tree-sitter wrapper
 
-(defmacro with-ts-node-pointer ((var node) &body forms)
-  `(let ((,var ,node))
-     (unwind-protect
-          (progn ,@forms)
-       (cffi-sys:foreign-free ,var))))
-
-(defmacro with-tree-cursor-pointer ((var tree) &body forms &aux (node (gensym)))
-  `(with-ts-node-pointer (,node (ts-tree-root-node-pointer ,tree))
-     (let ((,var (ts-tree-cursor-new-pointer ,node)))
-       (unwind-protect
-            (progn ,@forms)
-         (ts-tree-cursor-delete ,var)))))
-
 (defcfun ts-tree-root-node-pointer (:pointer (:struct ts-node))
   (tree ts-tree))
 
 (defcfun ts-tree-cursor-new-pointer (:pointer (:struct ts-tree-cursor))
   (node (:pointer (:struct ts-node))))
 
-(defcfun ts-node-is-named-pointer :boolean
+(defcfun ts-node-is-named-pointer :int
   (node (:pointer (:struct ts-node))))
 
 (defcfun ts-tree-cursor-current-node-pointer (:pointer (:struct ts-node))
