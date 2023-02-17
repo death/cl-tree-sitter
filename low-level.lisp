@@ -68,12 +68,6 @@
    #:ts-node-end-byte
    #:ts-node-end-point
    #:ts-node-string
-   #:ts-node-is-null
-   #:ts-node-is-named
-   #:ts-node-is-missing
-   #:ts-node-is-extra
-   #:ts-node-has-changes
-   #:ts-node-has-error
    #:ts-node-parent
    #:ts-node-child
    #:ts-node-child-count
@@ -92,7 +86,6 @@
    #:ts-node-named-descendant-for-byte-range
    #:ts-node-named-descendant-for-point-range
    #:ts-node-edit
-   #:ts-node-eq
    #:ts-tree-cursor-new
    #:ts-tree-cursor-delete
    #:with-tree-cursor
@@ -112,7 +105,14 @@
    #:ts-language-field-name-for-id
    #:ts-language-field-id-for-name
    #:ts-language-symbol-type
-   #:ts-language-version))
+   #:ts-language-version
+   #:ts-tree-cursor-new-pointer
+   #:ts-tree-root-node-pointer
+   #:ts-node-is-named-pointer
+   #:ts-tree-cursor-current-node-pointer
+   #:ts-node-start-point-pointer
+   #:ts-node-end-point-pointer
+   #:ts-node-type-pointer))
 
 (in-package #:cl-tree-sitter/low-level)
 
@@ -123,6 +123,13 @@
   (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
 
 (use-foreign-library tree-sitter)
+
+(define-foreign-library (tree-sitter-wrapper
+                         :search-path
+                         (asdf:system-relative-pathname :cl-tree-sitter ""))
+  (t (:default "tree-sitter-wrapper")))
+
+(use-foreign-library tree-sitter-wrapper)
 
 ;; Types
 
@@ -327,24 +334,6 @@
 (defcfun ts-node-string :pointer
   (node (:struct ts-node)))
 
-(defcfun ts-node-is-null :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-named :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-missing :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-is-extra :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-has-changes :boolean
-  (node (:struct ts-node)))
-
-(defcfun ts-node-has-error :boolean
-  (node (:struct ts-node)))
-
 (defcfun ts-node-parent (:struct ts-node)
   (node (:struct ts-node)))
 
@@ -414,10 +403,6 @@
 (defcfun ts-node-edit :void
   (node (:pointer (:struct ts-node)))
   (edit (:pointer (:struct ts-input-edit))))
-
-(defcfun ts-node-eq :boolean
-  (node1 (:struct ts-node))
-  (node2 (:struct ts-node)))
 
 (defcfun ts-tree-cursor-new (:struct ts-tree-cursor)
   (node (:struct ts-node)))
@@ -500,3 +485,26 @@
 
 (defcfun ts-language-version :uint32
   (language ts-language))
+
+;; tree-sitter wrapper
+
+(defcfun ts-tree-root-node-pointer (:pointer (:struct ts-node))
+  (tree ts-tree))
+
+(defcfun ts-tree-cursor-new-pointer (:pointer (:struct ts-tree-cursor))
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-is-named-pointer :int
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-tree-cursor-current-node-pointer (:pointer (:struct ts-node))
+  (cursor (:pointer (:struct ts-tree-cursor))))
+
+(defcfun ts-node-start-point-pointer (:struct ts-point)
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-end-point-pointer (:struct ts-point)
+  (node (:pointer (:struct ts-node))))
+
+(defcfun ts-node-type-pointer :string
+  (node (:pointer (:struct ts-node))))

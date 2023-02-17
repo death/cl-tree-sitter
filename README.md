@@ -2,9 +2,14 @@
 
 Use [tree-sitter](https://tree-sitter.github.io/) via Common Lisp.
 
-You'll need to use [my CFFI fork](https://github.com/death/cffi), as
-well as compile tree-sitter and the parser modules as shared
-libraries and make sure CFFI finds them.
+This library requires that tree-sitter and the desired parser modules are
+compiled as shared libraries and are located somewhere that CFFI can find them.
+It also requires a C compiler to compile a wrapper library around the tree-sitter
+API.
+
+The tree-sitter API has many functions which expect that a struct is passed
+by-value. This isn't currently supported by CFFI, but a wrapper library is
+distributed with this library to work around this.
 
 # Example
 
