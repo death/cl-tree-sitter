@@ -5,7 +5,9 @@
 TSNode *ts_tree_root_node_pointer(const TSTree *self) {
     TSNode *node = malloc(sizeof(TSNode));
 
-    *node = ts_tree_root_node(self);
+    if (node) {
+        *node = ts_tree_root_node(self);
+    }
 
     return node;
 }
@@ -13,7 +15,9 @@ TSNode *ts_tree_root_node_pointer(const TSTree *self) {
 TSTreeCursor *ts_tree_cursor_new_pointer(TSNode *node) {
     TSTreeCursor *cursor = malloc(sizeof(TSTreeCursor));
 
-    *cursor = ts_tree_cursor_new(*node);
+    if (cursor) {
+        *cursor = ts_tree_cursor_new(*node);
+    }
 
     return cursor;
 }
@@ -21,7 +25,9 @@ TSTreeCursor *ts_tree_cursor_new_pointer(TSNode *node) {
 TSNode *ts_tree_cursor_current_node_pointer(const TSTreeCursor *cursor) {
     TSNode *return_node = malloc(sizeof(TSNode));
 
-    *return_node = ts_tree_cursor_current_node(cursor);
+    if (return_node) {
+        *return_node = ts_tree_cursor_current_node(cursor);
+    }
 
     return return_node;
 }
