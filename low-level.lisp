@@ -494,7 +494,7 @@
 (defcfun ts-tree-cursor-new-pointer (:pointer (:struct ts-tree-cursor))
   (node (:pointer (:struct ts-node))))
 
-(defcfun ts-node-is-named-pointer :int
+(defcfun ts-node-is-named-pointer :boolean
   (node (:pointer (:struct ts-node))))
 
 (defcfun ts-tree-cursor-current-node-pointer (:pointer (:struct ts-node))
