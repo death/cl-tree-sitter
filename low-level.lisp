@@ -118,18 +118,24 @@
 
 ;; Library
 
-(define-foreign-library tree-sitter
-  (:darwin (:default "/usr/local/lib/libtree-sitter"))
-  (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
+(handler-case
+    (cffi:foreign-library-loaded-p 'cl-tree-sitter.config::tree-sitter)
+  (t (e)
+    (declare (ignorable e))
+    (define-foreign-library cl-tree-sitter.config::tree-sitter
+      (:darwin (:default "/usr/local/lib/libtree-sitter"))
+      (t (:or (:default "tree-sitter") (:default "libtree-sitter"))))
+    (use-foreign-library cl-tree-sitter.config::tree-sitter-wrapper)))
 
-(use-foreign-library tree-sitter)
-
-(define-foreign-library (tree-sitter-wrapper
-                         :search-path
-                         (asdf:system-relative-pathname :cl-tree-sitter ""))
-  (t (:default "tree-sitter-wrapper")))
-
-(use-foreign-library tree-sitter-wrapper)
+(handler-case
+    (cffi:foreign-library-loaded-p 'cl-tree-sitter.config::tree-sitter-wrapper)
+  (t (e)
+    (declare (ignorable e))
+    (define-foreign-library (cl-tree-sitter.config::tree-sitter-wrapper
+                             :search-path
+                             (asdf:system-relative-pathname :cl-tree-sitter ""))
+      (t (:default "tree-sitter-wrapper")))
+    (use-foreign-library cl-tree-sitter.config::tree-sitter-wrapper)))
 
 ;; Types
 
