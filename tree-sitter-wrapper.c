@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "api.h"
+#include <tree_sitter/api.h>
 
 TSNode *ts_tree_root_node_pointer(const TSTree *self) {
     TSNode *node = malloc(sizeof(TSNode));
