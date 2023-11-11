@@ -1,2 +1,4 @@
 *.so
 *.so.*
+*.dylib
+*.dylib.*
